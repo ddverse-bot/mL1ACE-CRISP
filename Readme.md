@@ -17,8 +17,13 @@ Uncertainty Estimation
 Evaluation & Visualization
 
 ## Example Output
-Below is an example from the model:
+Below are some examples from the model:
 ![alt text](Figure_1.png)
+<img width="1200" height="400" alt="image" src="https://github.com/user-attachments/assets/5fd7d7be-8ebd-4142-8a2e-78d21611a6ea" />
+<img width="1200" height="400" alt="image" src="https://github.com/user-attachments/assets/068f6157-f619-4220-9ad7-70a3dd7b1920" />
+<img width="1200" height="400" alt="image" src="https://github.com/user-attachments/assets/5822f701-66d8-4de3-b87a-394cd4b6834f" />
+<img width="1200" height="400" alt="image" src="https://github.com/user-attachments/assets/094a7232-58cb-4312-8c6d-9e0d1d9cbefe" />
+
 
 Left: Ground truth mask
 Middle: Predicted mask from U-Net
@@ -123,7 +128,7 @@ Example Metrics
 
 From current experiments:
 
-Average Dice Score: 0.7262
-Average Correlation (Uncertainty vs Error): -0.2050
-Average Mutual Information: 0.5908
-Average ECE: 0.5860
+Average Dice Score: 0.8354
+Average Correlation (Uncertainty vs Error): 0.3040
+Average Mutual Information: 0.7863
+Average ECE: 0.2458

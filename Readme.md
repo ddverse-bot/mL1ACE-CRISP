@@ -132,3 +132,20 @@ Average Dice Score: 0.8354
 Average Correlation (Uncertainty vs Error): 0.3040
 Average Mutual Information: 0.7863
 Average ECE: 0.2458
+
+The same training pipeline has been tried on Covid-19 CT scan dataset
+Dataset link: https://www.kaggle.com/datasets/nguyentienda32143/covid-19-ct-lung-and-infection-segmentation
+Metrics:
+Correlation : 0.2468
+Mutual Information: 0.6234
+ECE: 0.2312
+Some visualizations:
+<img width="1660" height="453" alt="image" src="https://github.com/user-attachments/assets/bb7331b9-a799-4f6e-9ad1-a8b0e1764abd" />
+<img width="1646" height="450" alt="Screenshot 2026-03-21 124832" src="https://github.com/user-attachments/assets/554a7ab8-639d-4938-a737-21a1958b402d" />
+<img width="1658" height="496" alt="Screenshot 2026-03-21 124818" src="https://github.com/user-attachments/assets/73e46312-0d7d-4d49-8987-1f4b1b204b2c" />
+<img width="1635" height="460" alt="Screenshot 2026-03-21 124300" src="https://github.com/user-attachments/assets/934bab52-394f-4d33-bb2f-9a7d2a9c3644" />
+
+
+
+
+

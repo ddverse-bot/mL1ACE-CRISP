@@ -5,7 +5,7 @@ from sklearn.metrics import mutual_info_score
 from scipy.stats import pearsonr
 import cv2
 
-# ---------------- PATHS ----------------
+
 ground_truth_dir = "data/test/masks"
 pred_mask_dir = "predicted_masks"
 pred_uncertainty_dir = "predicted_uncertainty"
@@ -14,7 +14,7 @@ results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 
 
-# ---------------- METRICS ----------------
+
 def dice_score(y_true, y_pred, eps=1e-6):
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
@@ -96,13 +96,13 @@ def reliability_diagram(confidences, errors, save_path):
     plt.close()
 
 
-# ---------------- LOAD FILES ----------------
+
 gt_files = sorted(os.listdir(ground_truth_dir))
 pred_mask_files = sorted(os.listdir(pred_mask_dir))
 pred_unc_files = sorted(os.listdir(pred_uncertainty_dir))
 
 
-# ---------------- STORAGE ----------------
+
 dice_scores = []
 correlations = []
 mi_scores = []
@@ -113,7 +113,7 @@ mce_scores = []
 
 print("Starting evaluation...\n")
 
-# ---------------- MAIN LOOP ----------------
+
 for gt_file, pred_file, unc_file in zip(gt_files, pred_mask_files, pred_unc_files):
 
     gt = cv2.imread(os.path.join(ground_truth_dir, gt_file), 0) / 255.0
@@ -156,7 +156,7 @@ for gt_file, pred_file, unc_file in zip(gt_files, pred_mask_files, pred_unc_file
     mce_scores.append(mce)
 
 
-# ---------------- PRINT RESULTS ----------------
+
 print("----- FINAL RESULTS -----")
 print(f"Average Dice Score: {np.mean(dice_scores):.4f}")
 print(f"Avg Correlation (Uncertainty vs Error): {np.mean(correlations):.4f}")
@@ -166,7 +166,7 @@ print(f"Average ACE: {np.mean(ace_scores):.4f}")
 print(f"Average MCE: {np.mean(mce_scores):.4f}")
 
 
-# ---------------- VISUALIZATION ----------------
+
 print("\nGenerating visualizations...")
 
 for i in range(min(5, len(gt_files))):
@@ -213,4 +213,4 @@ for i in range(min(5, len(gt_files))):
     )
 
 
-print("✅ Done! Results saved in 'results/' folder.")ed to 'results/' folder.")
+print(" Done! Results saved in 'results/' folder.")ed to 'results/' folder.")

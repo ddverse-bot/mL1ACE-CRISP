@@ -5,16 +5,16 @@ from sklearn.metrics import mutual_info_score
 from scipy.stats import pearsonr
 import cv2
 
-
+# ---------------- PATHS ----------------
 ground_truth_dir = "data/test/masks"
 pred_mask_dir = "predicted_masks"
+pred_prob_dir = "predicted_probs"              
 pred_uncertainty_dir = "predicted_uncertainty"
 results_dir = "results"
 
 os.makedirs(results_dir, exist_ok=True)
 
-
-
+# ---------------- METRICS ----------------
 def dice_score(y_true, y_pred, eps=1e-6):
     y_true = y_true.flatten()
     y_pred = y_pred.flatten()
@@ -29,7 +29,6 @@ def compute_calibration(confidences, errors, n_bins=10):
     - ACE (Average Calibration Error)
     - MCE (Maximum Calibration Error)
     """
-
     bin_edges = np.linspace(0, 1, n_bins + 1)
 
     ece = 0.0
@@ -96,55 +95,60 @@ def reliability_diagram(confidences, errors, save_path):
     plt.close()
 
 
-
+# ---------------- FILES ----------------
 gt_files = sorted(os.listdir(ground_truth_dir))
 pred_mask_files = sorted(os.listdir(pred_mask_dir))
+pred_prob_files = sorted(os.listdir(pred_prob_dir))
 pred_unc_files = sorted(os.listdir(pred_uncertainty_dir))
 
-
-
+# ---------------- STORAGE ----------------
 dice_scores = []
+
+# CRISP / uncertainty metrics
 correlations = []
 mi_scores = []
+
+# Calibration (paper)
 ece_scores = []
 ace_scores = []
 mce_scores = []
 
-
 print("Starting evaluation...\n")
 
+# ---------------- MAIN LOOP ----------------
+for i in range(len(gt_files)):
 
-for gt_file, pred_file, unc_file in zip(gt_files, pred_mask_files, pred_unc_files):
+    gt = cv2.imread(os.path.join(ground_truth_dir, gt_files[i]), 0) / 255.0
+    pred_mask = cv2.imread(os.path.join(pred_mask_dir, pred_mask_files[i]), 0) / 255.0
+    pred_prob = cv2.imread(os.path.join(pred_prob_dir, pred_prob_files[i]), 0) / 255.0
+    pred_unc = cv2.imread(os.path.join(pred_uncertainty_dir, pred_unc_files[i]), 0) / 255.0
 
-    gt = cv2.imread(os.path.join(ground_truth_dir, gt_file), 0) / 255.0
-    pred_mask = cv2.imread(os.path.join(pred_mask_dir, pred_file), 0) / 255.0
-    pred_unc = cv2.imread(os.path.join(pred_uncertainty_dir, unc_file), 0) / 255.0
-
-    # Binarize prediction (important!)
+    # ---------------- SEGMENTATION ----------------
     pred_mask_bin = (pred_mask > 0.5).astype(np.float32)
-
-    # Dice
     dice = dice_score(gt, pred_mask_bin)
     dice_scores.append(dice)
 
-    # Error map
+    # ---------------- ERROR ----------------
     error_map = np.abs(gt - pred_mask_bin)
 
-    # Confidence = 1 - uncertainty
-    confidence = 1 - pred_unc
-
-    # Correlation (uncertainty vs error)
+    # ---------------- CRISP UNCERTAINTY ----------------
+    # Correlation
     if np.std(pred_unc) == 0:
         corr = 0
     else:
         corr, _ = pearsonr(pred_unc.flatten(), error_map.flatten())
     correlations.append(corr)
 
-    # Mutual Information
-    mi = mutual_info_score(gt.flatten(), pred_unc.flatten())
+    # Mutual Information (DISCRETIZED)
+    mi = mutual_info_score(
+        gt.flatten().astype(int),
+        (pred_unc.flatten() * 10).astype(int)
+    )
     mi_scores.append(mi)
 
-    # Calibration metrics
+    # ---------------- CALIBRATION (PAPER CORRECT) ----------------
+    confidence = pred_prob  
+
     ece, ace, mce = compute_calibration(
         confidence.flatten(),
         error_map.flatten(),
@@ -156,47 +160,56 @@ for gt_file, pred_file, unc_file in zip(gt_files, pred_mask_files, pred_unc_file
     mce_scores.append(mce)
 
 
-
+# ---------------- FINAL RESULTS ----------------
 print("----- FINAL RESULTS -----")
 print(f"Average Dice Score: {np.mean(dice_scores):.4f}")
+
+print("\n--- Uncertainty (CRISP) ---")
 print(f"Avg Correlation (Uncertainty vs Error): {np.mean(correlations):.4f}")
 print(f"Average Mutual Information: {np.mean(mi_scores):.4f}")
+
+print("\n--- Calibration (Paper) ---")
 print(f"Average ECE: {np.mean(ece_scores):.4f}")
 print(f"Average ACE: {np.mean(ace_scores):.4f}")
 print(f"Average MCE: {np.mean(mce_scores):.4f}")
 
 
-
+# ---------------- VISUALIZATION ----------------
 print("\nGenerating visualizations...")
 
 for i in range(min(5, len(gt_files))):
 
     gt = cv2.imread(os.path.join(ground_truth_dir, gt_files[i]), 0) / 255.0
     pred_mask = cv2.imread(os.path.join(pred_mask_dir, pred_mask_files[i]), 0) / 255.0
+    pred_prob = cv2.imread(os.path.join(pred_prob_dir, pred_prob_files[i]), 0) / 255.0
     pred_unc = cv2.imread(os.path.join(pred_uncertainty_dir, pred_unc_files[i]), 0) / 255.0
 
-    confidence = 1 - pred_unc
     error_map = np.abs(gt - (pred_mask > 0.5).astype(np.float32))
 
-    # Plot images
-    plt.figure(figsize=(12, 4))
+    # ---------------- IMAGE PLOTS ----------------
+    plt.figure(figsize=(15, 4))
 
-    plt.subplot(1, 4, 1)
+    plt.subplot(1, 5, 1)
     plt.title("Ground Truth")
     plt.imshow(gt, cmap='gray')
     plt.axis('off')
 
-    plt.subplot(1, 4, 2)
+    plt.subplot(1, 5, 2)
     plt.title("Prediction")
     plt.imshow(pred_mask, cmap='gray')
     plt.axis('off')
 
-    plt.subplot(1, 4, 3)
+    plt.subplot(1, 5, 3)
+    plt.title("Probability")
+    plt.imshow(pred_prob, cmap='viridis')
+    plt.axis('off')
+
+    plt.subplot(1, 5, 4)
     plt.title("Uncertainty")
     plt.imshow(pred_unc, cmap='hot')
     plt.axis('off')
 
-    plt.subplot(1, 4, 4)
+    plt.subplot(1, 5, 5)
     plt.title("Error Map")
     plt.imshow(error_map, cmap='jet')
     plt.axis('off')
@@ -205,12 +218,11 @@ for i in range(min(5, len(gt_files))):
     plt.savefig(os.path.join(results_dir, f"example_{i}.png"))
     plt.close()
 
-    # Reliability diagram
+    # ---------------- RELIABILITY DIAGRAM ----------------
     reliability_diagram(
-        confidence.flatten(),
+        pred_prob.flatten(),
         error_map.flatten(),
         os.path.join(results_dir, f"reliability_{i}.png")
     )
 
-
-print(" Done! Results saved in 'results/' folder.")ed to 'results/' folder.")
+print("Done! Results saved in 'results/' folder.")
